@@ -225,49 +225,51 @@ class SwipeMenuLayout @JvmOverloads constructor(
         }
       }
       MotionEvent.ACTION_UP -> {
-        dx = (mDownX - ev.x).toInt()
-        dy = (mDownY - ev.y).toInt()
+        if (isSwipeEnable) {
+          dx = (mDownX - ev.x).toInt()
+          dy = (mDownY - ev.y).toInt()
 
-        mDragging = false
-        velocityTracker.computeCurrentVelocity(1000, mScaledMaximumFlingVelocity.toFloat())
+          mDragging = false
+          velocityTracker.computeCurrentVelocity(1000, mScaledMaximumFlingVelocity.toFloat())
 
-        val velocityX = velocityTracker.xVelocity.toInt()
-        val velocity = Math.abs(velocityX)
+          val velocityX = velocityTracker.xVelocity.toInt()
+          val velocity = Math.abs(velocityX)
 
-        if (velocity > mScaledMinimumFlingVelocity) {
-          if (mSwipeCurrentHorizontal != null) {
-            val duration = getSwipeDuration(ev, velocity)
+          if (velocity > mScaledMinimumFlingVelocity) {
+            if (mSwipeCurrentHorizontal != null) {
+              val duration = getSwipeDuration(ev, velocity)
 
-            if (mSwipeCurrentHorizontal is SwipeRightHorizontal) {
-              if (velocityX < 0) {
-                smoothOpenMenu(duration)
+              if (mSwipeCurrentHorizontal is SwipeRightHorizontal) {
+                if (velocityX < 0) {
+                  smoothOpenMenu(duration)
+                } else {
+                  smoothCloseMenu(duration)
+                }
               } else {
-                smoothCloseMenu(duration)
+                if (velocityX > 0) {
+                  smoothOpenMenu(duration)
+                } else {
+                  smoothCloseMenu(duration)
+                }
               }
-            } else {
-              if (velocityX > 0) {
-                smoothOpenMenu(duration)
-              } else {
-                smoothCloseMenu(duration)
-              }
+              ViewCompat.postInvalidateOnAnimation(this)
             }
-            ViewCompat.postInvalidateOnAnimation(this)
+          } else {
+            judgeOpenClose(dx, dy)
           }
-        } else {
-          judgeOpenClose(dx, dy)
-        }
 
-        velocityTracker.clear()
-        velocityTracker.recycle()
-        mVelocityTracker = null
+          velocityTracker.clear()
+          velocityTracker.recycle()
+          mVelocityTracker = null
 
-        if (Math.abs(mDownX - ev.x) > mScaledTouchSlop
-            || Math.abs(mDownY - ev.y) > mScaledTouchSlop
-            || isLeftMenuOpen
-            || isRightMenuOpen) {
-          ev.action = MotionEvent.ACTION_CANCEL
-          super.onTouchEvent(ev)
-          return true
+          if (Math.abs(mDownX - ev.x) > mScaledTouchSlop
+              || Math.abs(mDownY - ev.y) > mScaledTouchSlop
+              || isLeftMenuOpen
+              || isRightMenuOpen) {
+            ev.action = MotionEvent.ACTION_CANCEL
+            super.onTouchEvent(ev)
+            return true
+          }
         }
       }
       MotionEvent.ACTION_CANCEL -> {
